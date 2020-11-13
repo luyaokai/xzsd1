@@ -1,0 +1,37 @@
+
+spring:
+  #     腾讯云上传大小限制
+  http:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  redis:
+    host: 127.0.0.1
+    password:
+    database: 9
+    port: 6379
+  datasource:
+    name: dataSource
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost/walkbook?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true
+
+    username: root
+    password:
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/**/*Mapper.xml
+  config-location: classpath:mybatis/mybatis-config.xml
+sc:
+  cloud:
+#    dev: true
+    debug: true
+    task:
+      core-pool-size: 20
+      max-pool-size: 50
+      queue-capacity: 200
+      keep-alive-seconds: 3000
+      thread-name-prefix: sc-task-executor-
+    swagger:
+      enabled: true
+      description: 'spring cloud 模板项目'

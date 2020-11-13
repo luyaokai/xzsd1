@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.clientHome.dao.ClientHomeDao">
+
+    <!--轮播图列表-->
+    <select id="listSlideshow" parameterType="java.lang.String" resultType="com.xzsd.app.clientHome.entity.AppSlideshowInfo">
+        select
+        goods_code goodsCode,
+        image_path  imagePath
+        from t_sys_slideshow
+        where is_deleted = 0
+        and now() between work_time and dead_time
+        and slideshow_state = 0
+        order by slideshow_sort asc
+    </select>
+
+    <!--热门商品列表-->
+    <select id="listHotGoods" parameterType="java.lang.String" resultType="com.xzsd.app.clientHome.entity.AppHotGoodsInfo">
+        select
+        a.goods_code  goodsCode,
+        b.image_path  imagePath,
+        b.goods_name  goodsName,
+        b.sell_price  sellPrice
+        from t_sys_hotgoods a, t_sys_goods b
+        where a.is_deleted = 0
+        and a.goods_code = b.goods_code
+        and b.goods_state = 0
+        order by a.hotgoods_sort asc
+    </select>
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.userInformation.dao.UserDao">
+
+    <!--统计用户账号数量-->
+    <select id="countUserAcct" parameterType="com.xzsd.app.userInformation.entity.UserInformation" resultType="int">
+        select count(user_acct)
+        from t_sys_user
+        where is_deleted = 0
+        and user_acct = #{userAcct}
+    </select>
+
+    <!--判断邀请码是否存在-->
+    <select id="countInviteCode" parameterType="com.xzsd.app.userInformation.entity.UserInformation" resultType="int">
+        select count(invite_code)
+        from t_sys_shop
+        where is_deleted = 0
+        and invite_code = #{inviteCode}
+    </select>
+
+    <!--判断客户是否绑定邀请码-->
+    <select id="countInviteCode1" parameterType="java.lang.String" resultType="int">
+        select count(invite_code)
+        from t_sys_shop
+        where is_deleted = 0
+        and user_code = #{userId}
+    </select>
+
+    <!--统计用户角色-->
+    <select id="getRole" parameterType="java.lang.String" resultType="java.lang.String">
+        select role
+        from t_sys_user
+        where is_deleted = 0
+        and user_code = #{userId}
+    </select>
+
+    <!--查询店长或顾客所在的门店地址-->
+    <select id="getAddress" parameterType="com.xzsd.app.userInformation.entity.UserInformation" resultType="com.xzsd.app.userInformation.entity.AddressInfo">
+        select
+            b.area_name provinceName,
+            c.area_name cityName,
+            d.area_name areaName
+        from t_sys_shop a, t_sys_area b, t_sys_area c, t_sys_area d
+        where a.province_code = b.area_code
+        and a.city_code = c.area_code
+        and a.area_code = d.area_code
+        and a.is_deleted = 0
+        <if test="role == 1">
+            and user_code = #{userId}
+        </if>
+        <if test="role == 3">
+            and invite_code = (select invite_code from t_sys_user where user_code = #{userId})
+        </if>
+    </select>
+
+    <!--新增客户-->
+    <insert id="clientRegister" parameterType="com.xzsd.app.userInformation.entity.UserInformation">
+        insert into t_sys_user
+        (user_code,
+         user_name,
+         user_acct,
+         user_pwd,
+         id_card,
+         sex,
+         phone,
+         email,
+         role,
+         image_path,
+         is_deleted,
+         create_user,
+         create_time,
+         update_user,
+         update_time,
+         version,
+         invite_code)
+        values
+           (#{userCode},
+            #{userName},
+            #{userAcct},
+            #{userPwd},
+            #{idCard},
+            #{sex},
+            #{phone},
+            #{email},
+            3,
+            #{imagePath},
+            #{isDeleted},
+            #{createUser1},
+            now(),
+            #{updateUser1},
+            now(),
+            0,
+            #{inviteCode})
+    </insert>
+
+    <!--获取用户信息-->
+    <select id="getUser" parameterType="java.lang.String" resultType="com.xzsd.app.userInformation.entity.UserInformation">
+        select
+            a.user_code userCode,
+            a.user_name userName,
+            a.user_acct userAcct,
+            a.phone,
+            a.role role,
+            b.shop_code shopCode1,
+            b.shop_name shopName1,
+            c.shop_code shopCode2,
+            c.shop_name shopName2,
+            b.invite_code inviteCode,
+            b.shop_address address1,
+            c.shop_address address2,
+            a.image_path imagePath,
+            a.version
+        from t_sys_user a
+        left join t_sys_shop b on a.user_code = b.user_code
+        and b.is_deleted = 0
+        left join t_sys_shop c on a.invite_code = c.invite_code
+        and c.is_deleted = 0
+        where a.user_code = #{userId}
+        and a.is_deleted = 0
+    </select>
+
+    <!--获取用户密码-->
+    <select id="getUserPwd" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+            user_pwd userPwd
+        from t_sys_user
+        where user_code = #{userId}
+    </select>
+
+    <!--修改用户密码-->
+    <update id="updatePwd" parameterType="com.xzsd.app.userInformation.entity.PwdInfo">
+        update t_sys_user
+        set
+            user_pwd     = #{newPwd},
+            update_time  = now(),
+            update_user  = #{userId}
+        where user_code = #{userId}
+    </update>
+
+    <!--修改用户密码-->
+    <update id="updateInviteCode" parameterType="com.xzsd.app.userInformation.entity.UserInformation">
+        update t_sys_user
+        set
+        invite_code     = #{inviteCode},
+        update_time  = now(),
+        update_user  = #{userCode}
+        where user_code = #{userCode}
+    </update>
+</mapper>

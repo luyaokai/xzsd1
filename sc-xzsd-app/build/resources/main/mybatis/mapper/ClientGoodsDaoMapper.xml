@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.clientGoods.dao.ClientGoodsDao">
+    <!--查询商品详情-->
+    <select id="getGoods" parameterType="java.lang.String" resultType="com.xzsd.app.clientGoods.entity.AppGoodsInfo">
+        select
+            goods_name goodsName,
+            goods_isbn goodsIsbn,
+            goods_introduce goodsIntroduce,
+            sell_price sellPrice,
+            image_path imagePath,
+            star_level starLevel,
+            goods_author goodsAuthor,
+            goods_press goodsPress,
+            goods_code goodsCode
+        from t_sys_goods
+        where goods_code = #{goodsCode}
+    </select>
+
+    <!--修改用户信息-->
+    <update id="updateSeeSum" parameterType="java.lang.String">
+        update t_sys_goods
+        set
+            see_sum      = see_sum + 1
+        where goods_code = #{goodsCode}
+    </update>
+
+    <!--评价列表-->
+    <select id="listGoodsEvaluatesByPage" parameterType="com.xzsd.app.clientGoods.entity.GoodsEvaluateInfo" resultType="com.xzsd.app.clientGoods.entity.GoodsEvaluateInfo">
+        select
+        b.user_acct userAcct,
+        a.evaluate_content evaluateContent,
+        a.evaluate_level evaluateLevel,
+        a.evaluate_time evaluateTime
+        from t_sys_goodsevaluate a
+        left join t_sys_user b on a.user_code = b.user_code
+        where goods_code = #{goodsCode}
+        <if test="evaluateLevel != null and evaluateLevel != ''">
+            and a.evaluate_level = #{evaluateLevel}
+        </if>
+        order by a.evaluate_time desc
+    </select>
+
+    <!--一级分类查询-->
+    <select id="listOneGoodsClassify" parameterType="java.lang.String" resultType="com.xzsd.app.clientGoods.entity.OneClassifyInfo">
+        select
+            classify_code classifyCode,
+            classify_name classifyName
+        from t_sys_goodsclassify
+        where is_deleted = 0
+        and classify_father = 0
+    </select>
+
+    <!--商品分类列表-->
+    <select id="listGetClassGoods"  resultMap="goodsClassifyMap">
+        select
+        a.classify_code classifyCode,
+        a.classify_name classifyName,
+        b.goods_code goodsCode,
+        b.goods_name goodsName,
+        b.image_path imagePath,
+        b.sell_price sellPrice
+        from t_sys_goodsclassify a left join t_sys_goods b
+        on a.classify_code = b.second_code
+        and b.is_deleted = 0
+        and b.goods_state = 0
+        where a.is_deleted = 0
+        and a.classify_father =  #{classifyCode}
+        order by a.create_time desc
+    </select>
+    <resultMap id="goodsClassifyMap" type="com.xzsd.app.clientGoods.entity.TwoClassifyInfo">
+        <id property="classifyCode" column="classifyCode"/>
+        <result property="classifyName" column="classifyName"/>
+        <collection property="goodsList" ofType="com.xzsd.app.clientGoods.entity.GoodsInfo">
+            <id property="goodsCode" column="goodsCode"/>
+            <result property="goodsName" column="goodsName"/>
+            <result property="imagePath" column="imagePath"/>
+            <result property="sellPrice" column="sellPrice"/>
+        </collection>
+    </resultMap>
+</mapper>

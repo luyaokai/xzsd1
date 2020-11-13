@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xzsd.app.managerOrder.dao.ManagerOrderDao">
+
+    <!--订单详情列表-->
+    <select id="listManagerOrders" parameterType="com.xzsd.app.managerOrder.entity.ManagerOrderInfo" resultMap="orderMap">
+        select
+        a.order_code orderCode,
+        a.order_state orderState,
+        c.goods_name goodsName,
+        c.image_path imagePath,
+        c.goods_introduce goodsIntroduce,
+        c.sell_price sellPrice,
+        b.buy_sum goodsCount,
+        b.goods_code goodsCode,
+        d.user_name userName,
+        d.user_code userId,
+        d.phone phone,
+        a.order_cost orderCost,
+        a.ordergoods_count orderGoodsCount,
+        a.version version
+        from t_sys_order a
+        left join t_sys_user d on a.user_code = d.user_code
+        left join t_sys_orderdetails b on a.order_code = b.order_code
+        left join t_sys_goods c on b.goods_code = c.goods_code
+        where a.shop_code = #{shopCode1}
+        <if test="orderState != null and orderState != ''">
+            and a.order_state = #{orderState}
+        </if>
+        order by a.pay_time desc
+    </select>
+    <resultMap id="orderMap" type="com.xzsd.app.managerOrder.entity.ManagerOrderInfo">
+        <id property="orderCode" column="orderCode"/>
+        <result property="orderState" column="orderState"/>
+        <result property="orderCost" column="orderCost"/>
+        <result property="orderGoodsCount" column="orderGoodsCount"/>
+        <result property="version" column="version"/>
+        <result property="userId" column="userId"/>
+        <result property="userName" column="userName"/>
+        <result property="phone" column="phone"/>
+        <collection property="goodsList" ofType="com.xzsd.app.clientOrder.entity.GoodsInfo">
+            <id property="goodsCode" column="goodsCode"/>
+            <result property="goodsName" column="goodsName"/>
+            <result property="imagePath" column="imagePath"/>
+            <result property="sellPrice" column="sellPrice"/>
+            <result property="goodsCount" column="goodsCount"/>
+        </collection>
+    </resultMap>
+
+    <!--修改订单状态-->
+    <update id="updateOrderState" parameterType="com.xzsd.app.managerOrder.entity.ManagerOrderInfo">
+        update t_sys_order
+        set
+        order_state = #{orderState},
+        update_time  = now(),
+        update_user  = #{userId},
+        version = version + 1
+        where order_code = #{orderCode}
+    </update>
+
+    <!--订单详情列表-->
+    <select id="listOrderDetails" parameterType="java.lang.String" resultMap="orderDetailsMap">
+        select
+        a.order_code orderCode,
+        a.order_state orderState,
+        c.goods_name goodsName,
+        c.image_path imagePath,
+        c.sell_price sellPrice,
+        b.buy_sum goodsCount,
+        b.goods_code goodsCode,
+        c.goods_introduce goodsIntroduce,
+        a.order_cost orderCost,
+        a.ordergoods_count orderGoodsCount,
+        a.pay_time payTime,
+        d.user_name userName,
+        d.phone phone
+        from t_sys_order a
+        left join t_sys_user d on a.user_code = d.user_code
+        left join t_sys_orderdetails b on a.order_code = b.order_code
+        left join t_sys_goods c on b.goods_code = c.goods_code
+        where a.is_deleted = 0
+        and a.order_code = #{orderCode}
+    </select>
+    <resultMap id="orderDetailsMap" type="com.xzsd.app.managerOrder.entity.ManagerOrderInfo">
+        <id property="orderCode" column="orderCode"/>
+        <result property="orderState" column="orderState"/>
+        <result property="orderCost" column="orderCost"/>
+        <result property="orderGoodsCount" column="orderGoodsCount"/>
+        <result property="payTime" column="payTime"/>
+        <result property="userName" column="userName"/>
+        <result property="phone" column="phone"/>
+        <collection property="goodsList" ofType="com.xzsd.app.clientOrder.entity.GoodsInfo">
+            <id property="goodsCode" column="goodsCode"/>
+            <result property="goodsName" column="goodsName"/>
+            <result property="imagePath" column="imagePath"/>
+            <result property="sellPrice" column="sellPrice"/>
+            <result property="goodsCount" column="goodsCount"/>
+            <result property="goodsIntroduce" column="goodsIntroduce"/>
+        </collection>
+    </resultMap>
+
+    <!--司机查询-->
+    <select id="listDrivers" parameterType="java.lang.String" resultType="com.xzsd.app.managerOrder.entity.DriverInfo">
+        select
+            user_name userName,
+            phone
+        from t_sys_user
+        where area_code = (select area_code from t_sys_shop where user_code = #{userId} and is_deleted = 0)
+    </select>
+
+    <!--门店查询-->
+    <select id="listDriverShop" parameterType="java.lang.String" resultType="com.xzsd.app.managerOrder.entity.ShopInfo">
+        select
+            a.shop_code shopCode,
+            a.shop_name shopName,
+            a.shop_address address,
+            b.user_name userName,
+            b.phone
+        from t_sys_shop a, t_sys_user b
+        where a.user_code = b.user_code
+        and a.is_deleted = 0
+        and a.area_code = (select area_code from t_sys_user where user_code = #{userId} and is_deleted = 0)
+    </select>
+</mapper>
